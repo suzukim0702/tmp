@@ -1,3 +1,70 @@
-_3_SS002_20240919_H230000289_TORISAKI-A20240919SN0000403_テスト002_TORISAKI-A
-_3_SS002_20240919_H230000289_TORISAKI-A20240919SN0000403_テスト002_TORISAKI-A
-_3_SS002_20240919_H230000289_TORISAKI-A20240919SN0000403_テスト002_TORISAKI-A
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class CsvWriter implements AutoCloseable {
+    private BufferedWriter writer;
+
+    // コンストラクタ: CSVファイルパスとヘッダーを受け取る
+    public CsvWriter(String filePath, String[] headers) throws IOException {
+        // ファイルを開き、BufferedWriterでラップ
+        writer = new BufferedWriter(new FileWriter(filePath));
+
+        // ヘッダーを書き込む
+        writeLine(headers);
+    }
+
+    // CSVの1行を書き込むメソッド
+    public void writeRecord(String[] values) throws IOException {
+        writeLine(values);
+    }
+
+    // CSV形式で1行を出力するヘルパーメソッド
+    private void writeLine(String[] values) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < values.length; i++) {
+            String value = values[i];
+            
+            // 値にカンマが含まれている場合、ダブルクオートで囲む
+            if (value.contains(",")) {
+                value = "\"" + value + "\"";
+            }
+
+            // 最後の項目でない限り、カンマを追加
+            sb.append(value);
+            if (i < values.length - 1) {
+                sb.append(",");
+            }
+        }
+        writer.write(sb.toString());
+        writer.newLine();  // 改行を追加
+    }
+
+    // リソースをクローズするメソッド（AutoCloseableの実装）
+    @Override
+    public void close() throws IOException {
+        if (writer != null) {
+            writer.close();
+        }
+    }
+
+    // サンプル実行メソッド
+    public static void main(String[] args) {
+        String filePath = "output.csv";
+        String[] headers = { "ID", "Name", "Description" };
+        String[][] data = {
+            { "1", "Item1", "Description with, comma" },
+            { "2", "Item2", "Another description" },
+            { "3", "Item3", "Simple description" }
+        };
+
+        // CsvWriterを使用してデータを書き込む
+        try (CsvWriter csvWriter = new CsvWriter(filePath, headers)) {
+            for (String[] record : data) {
+                csvWriter.writeRecord(record);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
