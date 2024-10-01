@@ -24,9 +24,14 @@ public class CsvWriter implements AutoCloseable {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < values.length; i++) {
             String value = values[i];
-            
-            // 値にカンマが含まれている場合、ダブルクオートで囲む
-            if (value.contains(",")) {
+
+            // ダブルクオートが含まれている場合はダブルクオートでエスケープ
+            if (value.contains("\"")) {
+                value = value.replace("\"", "\"\"");
+            }
+
+            // 値にカンマが含まれている場合、またはダブルクオートが含まれている場合はダブルクオートで囲む
+            if (value.contains(",") || value.contains("\"")) {
                 value = "\"" + value + "\"";
             }
 
@@ -54,8 +59,8 @@ public class CsvWriter implements AutoCloseable {
         String[] headers = { "ID", "Name", "Description" };
         String[][] data = {
             { "1", "Item1", "Description with, comma" },
-            { "2", "Item2", "Another description" },
-            { "3", "Item3", "Simple description" }
+            { "2", "Item2", "Another \"quoted\" description" },
+            { "3", "Item3", "Description with both \"quote, and comma\"" }
         };
 
         // CsvWriterを使用してデータを書き込む
