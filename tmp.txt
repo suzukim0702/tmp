@@ -1,18 +1,18 @@
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
 
 public class TimestampGenerator {
 
-    // yyyyMM形式の文字列を受け取って、その月の初日と次の月の初日のTimestampを返すメソッド
-    public static Pair<Timestamp, Timestamp> generateTimestamps(String yyyyMM) {
-        // yyyyMM形式のフォーマッタを用意
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMM");
+    // Timestampを受け取って、その月の初日と次の月の初日のTimestampを返すメソッド
+    public static Pair<Timestamp, Timestamp> generateTimestamps(Timestamp inputTimestamp) {
+        // TimestampからLocalDateに変換
+        LocalDate inputDate = inputTimestamp.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
 
-        // 文字列をLocalDateに変換（yyyy-MM-01となる）
-        LocalDate firstDayOfMonth = LocalDate.parse(yyyyMM + "01", formatter);
-
-        // 月初日の0時のTimestampを取得
+        // 月の初日の0時を取得
+        LocalDate firstDayOfMonth = inputDate.withDayOfMonth(1);
         Timestamp firstDayTimestamp = Timestamp.valueOf(firstDayOfMonth.atStartOfDay());
 
         // 次の月の初日の0時を取得
@@ -25,16 +25,17 @@ public class TimestampGenerator {
 
     // テスト用のメインメソッド
     public static void main(String[] args) {
-        String yyyyMM = "202310";  // 例: 2023年10月
+        // 現在のTimestampを使用
+        Timestamp now = new Timestamp(System.currentTimeMillis());
 
-        Pair<Timestamp, Timestamp> timestamps = generateTimestamps(yyyyMM);
+        Pair<Timestamp, Timestamp> timestamps = generateTimestamps(now);
 
         System.out.println("月の初日の0時: " + timestamps.getFirst());
         System.out.println("次の月の初日の0時: " + timestamps.getSecond());
     }
 }
 
-// シンプルなPairクラス（Javaには標準的なPairクラスがないため作成）
+// シンプルなPairクラス
 class Pair<T, U> {
     private final T first;
     private final U second;
