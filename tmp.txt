@@ -1,75 +1,54 @@
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
-public class CsvWriter implements AutoCloseable {
-    private BufferedWriter writer;
+public class TimestampGenerator {
 
-    // コンストラクタ: CSVファイルパスとヘッダーを受け取る
-    public CsvWriter(String filePath, String[] headers) throws IOException {
-        // ファイルを開き、BufferedWriterでラップ
-        writer = new BufferedWriter(new FileWriter(filePath));
+    // yyyyMM形式の文字列を受け取って、その月の初日と次の月の初日のTimestampを返すメソッド
+    public static Pair<Timestamp, Timestamp> generateTimestamps(String yyyyMM) {
+        // yyyyMM形式のフォーマッタを用意
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMM");
 
-        // ヘッダーを書き込む
-        writeLine(headers);
+        // 文字列をLocalDateに変換（yyyy-MM-01となる）
+        LocalDate firstDayOfMonth = LocalDate.parse(yyyyMM + "01", formatter);
+
+        // 月初日の0時のTimestampを取得
+        Timestamp firstDayTimestamp = Timestamp.valueOf(firstDayOfMonth.atStartOfDay());
+
+        // 次の月の初日の0時を取得
+        LocalDate firstDayOfNextMonth = firstDayOfMonth.plusMonths(1);
+        Timestamp firstDayOfNextMonthTimestamp = Timestamp.valueOf(firstDayOfNextMonth.atStartOfDay());
+
+        // 2つのTimestampをPairとして返す
+        return new Pair<>(firstDayTimestamp, firstDayOfNextMonthTimestamp);
     }
 
-    // CSVの1行を書き込むメソッド
-    public void writeRecord(String[] values) throws IOException {
-        writeLine(values);
-    }
-
-    // CSV形式で1行を出力するヘルパーメソッド
-    private void writeLine(String[] values) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < values.length; i++) {
-            String value = values[i];
-
-            // ダブルクオートが含まれている場合はダブルクオートでエスケープ
-            if (value.contains("\"")) {
-                value = value.replace("\"", "\"\"");
-            }
-
-            // 値にカンマが含まれている場合、またはダブルクオートが含まれている場合はダブルクオートで囲む
-            if (value.contains(",") || value.contains("\"")) {
-                value = "\"" + value + "\"";
-            }
-
-            // 最後の項目でない限り、カンマを追加
-            sb.append(value);
-            if (i < values.length - 1) {
-                sb.append(",");
-            }
-        }
-        writer.write(sb.toString());
-        writer.newLine();  // 改行を追加
-    }
-
-    // リソースをクローズするメソッド（AutoCloseableの実装）
-    @Override
-    public void close() throws IOException {
-        if (writer != null) {
-            writer.close();
-        }
-    }
-
-    // サンプル実行メソッド
+    // テスト用のメインメソッド
     public static void main(String[] args) {
-        String filePath = "output.csv";
-        String[] headers = { "ID", "Name", "Description" };
-        String[][] data = {
-            { "1", "Item1", "Description with, comma" },
-            { "2", "Item2", "Another \"quoted\" description" },
-            { "3", "Item3", "Description with both \"quote, and comma\"" }
-        };
+        String yyyyMM = "202310";  // 例: 2023年10月
 
-        // CsvWriterを使用してデータを書き込む
-        try (CsvWriter csvWriter = new CsvWriter(filePath, headers)) {
-            for (String[] record : data) {
-                csvWriter.writeRecord(record);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Pair<Timestamp, Timestamp> timestamps = generateTimestamps(yyyyMM);
+
+        System.out.println("月の初日の0時: " + timestamps.getFirst());
+        System.out.println("次の月の初日の0時: " + timestamps.getSecond());
+    }
+}
+
+// シンプルなPairクラス（Javaには標準的なPairクラスがないため作成）
+class Pair<T, U> {
+    private final T first;
+    private final U second;
+
+    public Pair(T first, U second) {
+        this.first = first;
+        this.second = second;
+    }
+
+    public T getFirst() {
+        return first;
+    }
+
+    public U getSecond() {
+        return second;
     }
 }
