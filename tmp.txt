@@ -1,55 +1,45 @@
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.ZoneId;
+Windows 11の基本機能では、2つのフォルダ内のファイルの有無やサイズの違いを直接一覧表示する専用機能はありませんが、**PowerShell** を使ってこれを簡単に行うことができます。
 
-public class TimestampGenerator {
+以下の手順で、PowerShellを使ってフォルダ内のファイルを比較し、サイズや有無の違いを一覧表示する方法を紹介します。
 
-    // Timestampを受け取って、その月の初日と次の月の初日のTimestampを返すメソッド
-    public static Pair<Timestamp, Timestamp> generateTimestamps(Timestamp inputTimestamp) {
-        // TimestampからLocalDateに変換
-        LocalDate inputDate = inputTimestamp.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+### 1. PowerShellを開く
+1. Windowsの検索バーに「PowerShell」と入力し、**Windows PowerShell**を右クリックして「管理者として実行」を選択します。
 
-        // 月の初日の0時を取得
-        LocalDate firstDayOfMonth = inputDate.withDayOfMonth(1);
-        Timestamp firstDayTimestamp = Timestamp.valueOf(firstDayOfMonth.atStartOfDay());
+### 2. コマンドを入力する
+次のコマンドを使用して、2つのフォルダのファイルの違いを比較します。たとえば、フォルダA (`C:\FolderA`) とフォルダB (`C:\FolderB`) の内容を比較する場合、次のように入力します。
 
-        // 次の月の初日の0時を取得
-        LocalDate firstDayOfNextMonth = firstDayOfMonth.plusMonths(1);
-        Timestamp firstDayOfNextMonthTimestamp = Timestamp.valueOf(firstDayOfNextMonth.atStartOfDay());
+```powershell
+Compare-Object (Get-ChildItem "C:\FolderA" | Select-Object Name, Length) (Get-ChildItem "C:\FolderB" | Select-Object Name, Length)
+```
 
-        // 2つのTimestampをPairとして返す
-        return new Pair<>(firstDayTimestamp, firstDayOfNextMonthTimestamp);
-    }
+このコマンドでは、次の処理を行っています。
+- `Get-ChildItem`：指定したフォルダのファイル一覧を取得。
+- `Select-Object Name, Length`：ファイル名とファイルサイズ（バイト単位）を選択。
+- `Compare-Object`：2つのフォルダのファイル名とサイズを比較。
 
-    // テスト用のメインメソッド
-    public static void main(String[] args) {
-        // 現在のTimestampを使用
-        Timestamp now = new Timestamp(System.currentTimeMillis());
+### 3. 結果の確認
+コマンドを実行すると、次のような結果が表示されます。
 
-        Pair<Timestamp, Timestamp> timestamps = generateTimestamps(now);
+```plaintext
+InputObject          SideIndicator
+-----------          -------------
+file1.txt            <=
+file2.txt            =>
+file3.txt            <=
+```
 
-        System.out.println("月の初日の0時: " + timestamps.getFirst());
-        System.out.println("次の月の初日の0時: " + timestamps.getSecond());
-    }
-}
+- `<=` は最初のフォルダ（`FolderA`）にのみ存在するファイルを示します。
+- `=>` は2番目のフォルダ（`FolderB`）にのみ存在するファイルを示します。
+- ファイルが両方のフォルダに存在する場合でも、ファイルサイズが異なる場合は表示されます。
 
-// シンプルなPairクラス
-class Pair<T, U> {
-    private final T first;
-    private final U second;
+### オプション: フルパスを含めたい場合
+ファイルのフルパスも比較に含めたい場合は、次のようにします。
 
-    public Pair(T first, U second) {
-        this.first = first;
-        this.second = second;
-    }
+```powershell
+Compare-Object (Get-ChildItem "C:\FolderA" | Select-Object FullName, Length) (Get-ChildItem "C:\FolderB" | Select-Object FullName, Length)
+```
 
-    public T getFirst() {
-        return first;
-    }
+これにより、ファイルのフルパスとサイズの違いも表示されるようになります。
 
-    public U getSecond() {
-        return second;
-    }
-}
+### まとめ
+Windows 11の標準機能のみでフォルダ比較を行うには、PowerShellを使用するのが便利です。ファイルの有無やサイズの違いを簡単に一覧表示できるので、必要に応じて応用も可能です。
