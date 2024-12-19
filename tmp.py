@@ -1,28 +1,39 @@
-import tkinter as tk
-from tkinter import scrolledtext
+def transform_and_calculate(input_str):
+    # Validation
+    if len(input_str) != 11 or not all(c.isalnum() or c == ' ' for c in input_str):
+        raise ValueError("Input must be an 11-character string with alphanumeric characters or spaces.")
 
+    # Conversion table
+    def char_to_number(c):
+        if c.isdigit():
+            return int(c)
+        elif 'A' <= c <= 'O':
+            return ord(c) - ord('A') + 1
+        elif 'P' <= c <= 'Z':
+            return ord(c) - ord('P')
+        elif c == ' ':
+            return 11
+        else:
+            raise ValueError("Invalid character in input.")
 
-def remove_newlines(input_string):
-    # \r\n (Windows) と \n (Unix) の両方の改行を取り除く
-    return input_string.replace('\r\n', '').replace('\n', '')
+    # Weights
+    weights = [7, 6, 5, 4, 3, 2, 1, 7, 6, 5, 4]
 
-def on_ok_clicked():
-    # OKボタンが押されたときの処理
-    text = text_area.get("1.0", tk.END)  # テキストエリアの内容を取得
-    print(eval(remove_newlines(text)))
+    # Transform characters to numbers and calculate weighted sum
+    total = 0
+    for i, char in enumerate(input_str):
+        total += char_to_number(char) * weights[i]
+#        print(char, char_to_number(char), weights[i], char_to_number(char) * weights[i])
 
-# メインウィンドウの作成
-root = tk.Tk()
-root.title("テキストエリアとOKボタンのUI")
-root.geometry("400x300")  # ウィンドウサイズを指定
+    # Calculate remainder and final result
+    remainder = total % 11
+    result = (11 - remainder) % 10  # Ensures a single digit
 
-# テキストエリア（スクロール付き）
-text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=40, height=10)
-text_area.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+    return result
 
-# OKボタン
-ok_button = tk.Button(root, text="OK", command=on_ok_clicked)
-ok_button.pack(pady=10)
-
-# ウィンドウのメインループ開始
-root.mainloop()
+# Example usage
+try:
+    input_string = "A1019 AAA01"  # Example input
+    print(transform_and_calculate(input_string))
+except ValueError as e:
+    print(e)
