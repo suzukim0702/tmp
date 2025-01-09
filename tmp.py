@@ -1,39 +1,24 @@
-def transform_and_calculate(input_str):
-    # Validation
-    if len(input_str) != 11 or not all(c.isalnum() or c == ' ' for c in input_str):
-        raise ValueError("Input must be an 11-character string with alphanumeric characters or spaces.")
+def process_text_file(input_file, output_file):
+    try:
+        with open(input_file, 'rb') as infile, open(output_file, 'wb') as outfile:
+            for line in infile:
+                # Ensure the line has enough characters
+                if len(line) >= 32:
+                    indicator = line[31]  # 32nd byte in 0-based indexing
 
-    # Conversion table
-    def char_to_number(c):
-        if c.isdigit():
-            return int(c)
-        elif 'A' <= c <= 'O':
-            return ord(c) - ord('A') + 1
-        elif 'P' <= c <= 'Z':
-            return ord(c) - ord('P')
-        elif c == ' ':
-            return 11
-        else:
-            raise ValueError("Invalid character in input.")
+                    if indicator == '1':
+                        outfile.write(line[:259] + '\n')
+                    elif indicator == '2':
+                        outfile.write(line[:268] + '\n')
+                    elif indicator in ('3', '4'):
+                        outfile.write(line[:260] + '\n')
+                    else:
+                        raise ValueError(f"Unexpected value at 32nd byte: {indicator}")
+                else:
+                    raise ValueError("Line does not have at least 32 characters")
 
-    # Weights
-    weights = [7, 6, 5, 4, 3, 2, 1, 7, 6, 5, 4]
-
-    # Transform characters to numbers and calculate weighted sum
-    total = 0
-    for i, char in enumerate(input_str):
-        total += char_to_number(char) * weights[i]
-#        print(char, char_to_number(char), weights[i], char_to_number(char) * weights[i])
-
-    # Calculate remainder and final result
-    remainder = total % 11
-    result = (11 - remainder) % 10  # Ensures a single digit
-
-    return result
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 # Example usage
-try:
-    input_string = "A1019 AAA01"  # Example input
-    print(transform_and_calculate(input_string))
-except ValueError as e:
-    print(e)
+# process_text_file('input.txt', 'output.txt')
